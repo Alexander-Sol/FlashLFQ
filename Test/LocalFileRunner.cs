@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ThermoFisher.CommonCore.Data.Interfaces;
 using Util;
+using static Nett.TomlObjectFactory;
 
 namespace Test
 {
@@ -349,6 +350,7 @@ namespace Test
             var results = FlashLfqExecutable.Results;
 
             //PIP PEP Threshold 0.02
+
             outputPath = outputBase + "_Pip2p5";
             Directory.CreateDirectory(outputPath);
             results.MbrQValueThreshold = 0.025;
@@ -407,6 +409,141 @@ namespace Test
                 proteinOutputPath: Path.Combine(outputPath, "QuantifiedProteins.tsv"),
                 bayesianProteinQuantOutput: null,
                 silent: false);
+        }
+
+        [Test]
+        [TestCase("02", "0.01")]
+        [TestCase("05", "0.025")]
+        [TestCase("1", "0.05")]
+        public static void TestMetaMorpheusOutputIonStarReruns(string donorQ, string pipFDR)
+        {
+            string psmFile = @"D:\PXD003881_IonStar_SpikeIn\MM106_CalSearch\Task2-SearchTask\AllPSMs.psmtsv";
+            string peptideFile = @"D:\PXD003881_IonStar_SpikeIn\MM106_CalSearch\Task2-SearchTask\AllPeptides.psmtsv";
+
+            var mzmlDirectoy = @"D:\PXD003881_IonStar_SpikeIn\MM106_CalSearch\Task1-CalibrateTask";
+
+            string outputBase = @"D:\PXD003881_IonStar_SpikeIn\FlashLFQ_PipEcho_UnNorm_" + donorQ;
+
+            string outputPath = outputBase + "_PipFDR-" + pipFDR;
+
+            string[] myargs = new string[]
+            {
+                "--rep",
+                mzmlDirectoy,
+                "--idt",
+                psmFile,
+                "--pep",
+                peptideFile,
+                "--out",
+                outputPath,
+                "--donorq",
+                "0.0" + donorQ,
+                "--pipfdr",
+                pipFDR,
+                "--ppm",
+                "10",
+                "--thr",
+                "10",
+                "--nor",
+                "false"
+            };
+
+            CMD.FlashLfqExecutable.Main(myargs);
+
+
+            string peaksPath = Path.Combine(outputPath, "QuantifiedPeaks.tsv");
+            Assert.That(File.Exists(peaksPath));
+            //File.Delete(peaksPath);
+
+            string peptidesPath = Path.Combine(outputPath, "QuantifiedPeptides.tsv");
+            Assert.That(File.Exists(peptidesPath));
+            //File.Delete(peptidesPath);
+
+            string proteinsPath = Path.Combine(outputPath, "QuantifiedProteins.tsv");
+            Assert.That(File.Exists(proteinsPath));
+            //File.Delete(proteinsPath);
+
+            var results = FlashLfqExecutable.Results;
+            if(donorQ == "1")
+            {
+                // PIP PEP Threshold 1.00
+                outputPath = outputBase + "_PipFDR-100";
+                Directory.CreateDirectory(outputPath);
+                results.MbrQValueThreshold = 1.0;
+                results.ReNormalizeResults();
+                results.CalculatePeptideResults(false);
+                results.CalculateProteinResultsMedianPolish(false);
+                results.WriteResults(
+                    peaksOutputPath: Path.Combine(outputPath, "QuantifiedPeaks.tsv"),
+                    modPeptideOutputPath: null,
+                    proteinOutputPath: null,
+                    bayesianProteinQuantOutput: null,
+                    silent: false);
+                results.WriteResults(
+                    peaksOutputPath: null,
+                    modPeptideOutputPath: Path.Combine(outputPath, "QuantifiedPeptides.tsv"),
+                    proteinOutputPath: null,
+                    bayesianProteinQuantOutput: null,
+                    silent: false);
+                results.WriteResults(
+                    peaksOutputPath: null,
+                    modPeptideOutputPath: null,
+                    proteinOutputPath: Path.Combine(outputPath, "QuantifiedProteins.tsv"),
+                    bayesianProteinQuantOutput: null,
+                    silent: false);
+            }
+            
+        }
+
+        [Test]
+
+        public static void TestMetaMorpheusOutputIonStarNoPIP()
+        {
+            string psmFile = @"D:\PXD003881_IonStar_SpikeIn\MM106_CalSearch\Task2-SearchTask\AllPSMs.psmtsv";
+            string peptideFile = @"D:\PXD003881_IonStar_SpikeIn\MM106_CalSearch\Task2-SearchTask\AllPeptides.psmtsv";
+
+            var mzmlDirectoy = @"D:\PXD003881_IonStar_SpikeIn\MM106_CalSearch\Task1-CalibrateTask";
+
+            string outputBase = @"D:\PXD003881_IonStar_SpikeIn\FlashLFQ_PipEcho_UnNorm_NoPIP";
+
+            string outputPath = outputBase + "_PipFDR-NA";
+
+            string[] myargs = new string[]
+            {
+                "--rep",
+                mzmlDirectoy,
+                "--idt",
+                psmFile,
+                "--pep",
+                peptideFile,
+                "--out",
+                outputPath,
+                "--mbr",
+                "false",
+                "--ppm",
+                "10",
+                "--thr",
+                "10",
+                "--nor",
+                "false"
+            };
+
+            CMD.FlashLfqExecutable.Main(myargs);
+
+
+            string peaksPath = Path.Combine(outputPath, "QuantifiedPeaks.tsv");
+            Assert.That(File.Exists(peaksPath));
+            //File.Delete(peaksPath);
+
+            string peptidesPath = Path.Combine(outputPath, "QuantifiedPeptides.tsv");
+            Assert.That(File.Exists(peptidesPath));
+            //File.Delete(peptidesPath);
+
+            string proteinsPath = Path.Combine(outputPath, "QuantifiedProteins.tsv");
+            Assert.That(File.Exists(proteinsPath));
+            //File.Delete(proteinsPath);
+
+           
         }
     }
 
