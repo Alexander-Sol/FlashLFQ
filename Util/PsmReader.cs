@@ -583,10 +583,10 @@ namespace Util
             if (split.Contains("File Name".ToLowerInvariant())
                         && split.Contains("Base Sequence".ToLowerInvariant())
                         && split.Contains("Full Sequence".ToLowerInvariant())
-                        && split.Contains("Peptide Monoisotopic Mass".ToLowerInvariant())
+                        && (split.Contains("Peptide Monoisotopic Mass".ToLowerInvariant()) || split.Contains("Monoisotopic Mass".ToLowerInvariant()))
                         && split.Contains("Scan Retention Time".ToLowerInvariant())
                         && split.Contains("Precursor Charge".ToLowerInvariant())
-                        && split.Contains("Protein Accession".ToLowerInvariant())
+                        && (split.Contains("Protein Accession".ToLowerInvariant()) || split.Contains("Accession".ToLowerInvariant()))
                         && split.Contains("Decoy/Contaminant/Target".ToLowerInvariant())
                         && split.Contains("QValue".ToLowerInvariant())
                         && split.Contains("QValue Notch".ToLowerInvariant()))
@@ -595,9 +595,17 @@ namespace Util
                 _baseSequCol = Array.IndexOf(split, "Base Sequence".ToLowerInvariant());
                 _fullSequCol = Array.IndexOf(split, "Full Sequence".ToLowerInvariant());
                 _monoMassCol = Array.IndexOf(split, "Peptide Monoisotopic Mass".ToLowerInvariant());
+                if (_monoMassCol < 0)
+                {
+                    _monoMassCol = Array.IndexOf(split, "Monoisotopic Mass".ToLowerInvariant());
+                }
                 _msmsRetnCol = Array.IndexOf(split, "Scan Retention Time".ToLowerInvariant());
                 _chargeStCol = Array.IndexOf(split, "Precursor Charge".ToLowerInvariant());
                 _protNameCol = Array.IndexOf(split, "Protein Accession".ToLowerInvariant());
+                if (_protNameCol < 0)
+                {
+                    _protNameCol = Array.IndexOf(split, "Accession".ToLowerInvariant());
+                }
                 _decoyCol = Array.IndexOf(split, "Decoy/Contaminant/Target".ToLowerInvariant());
                 _scoreCol = Array.IndexOf(split, "Score".ToLowerInvariant());
 
