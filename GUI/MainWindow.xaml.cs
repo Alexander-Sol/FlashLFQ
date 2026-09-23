@@ -1,4 +1,5 @@
 ﻿using FlashLFQ;
+using MassSpectrometry;
 using GUI.DataGridObjects;
 using IO.ThermoRawFileReader;
 using MzLibUtil;
@@ -97,6 +98,7 @@ namespace GUI
             mcmcIterationsTextBox.Text = settings.McmcSteps.ToString();
             mcmcRandomSeedTextBox.Text = settings.RandomSeed.ToString();
             requireMsmsIdInConditionCheckbox.IsChecked = settings.RequireMsmsIdInCondition;
+            rnaModeCheckbox.IsChecked = settings.RnaMode;
         }
 
         private void ParseSettings()
@@ -149,6 +151,7 @@ namespace GUI
             settings.IdSpecificChargeState = precursorIdOnlyCheckbox.IsChecked.Value;
             settings.ProteinQuantBaseCondition = (string)ControlConditionComboBox.SelectedItem;
             settings.RequireMsmsIdInCondition = requireMsmsIdInConditionCheckbox.IsChecked.Value;
+            settings.RnaMode = rnaModeCheckbox.IsChecked.Value;
 
             // isotope PPM tolerance
             if (double.TryParse(isotopePpmToleranceTextBox.Text, NumberStyles.Number, CultureInfo.InvariantCulture, out double isotopePpmTolerance))
@@ -243,7 +246,7 @@ namespace GUI
         {
             Microsoft.Win32.OpenFileDialog openPicker = new Microsoft.Win32.OpenFileDialog()
             {
-                Filter = "Identification Files|*.txt;*.tsv;*.psmtsv;*.tabular",
+                Filter = "Identification Files|*.txt;*.tsv;*.psmtsv;*.osmtsv;*.tabular",
                 FilterIndex = 1,
                 RestoreDirectory = true,
                 Multiselect = true
@@ -368,6 +371,7 @@ namespace GUI
                 case ".txt":
                 case ".tsv":
                 case ".psmtsv":
+                case ".osmtsv":
                 case ".tabular":
                     IdentificationFileForDataGrid identFile = new IdentificationFileForDataGrid(filePath);
                     if (!idFiles.Select(f => f.FilePath).Contains(identFile.FilePath) && !identFile.FileName.Equals("ExperimentalDesign.tsv"))
@@ -378,6 +382,13 @@ namespace GUI
                         {
                             idFiles.Add(identFile);
                             DragAndDropHelperLabelIdFiles.Visibility = Visibility.Hidden;
+
+                            // .osmtsv files hold oligonucleotide (RNA) spectrum matches, so adding one
+                            // switches FlashLFQ into RNA mode. The user can still uncheck it manually.
+                            if (theExtension == ".osmtsv")
+                            {
+                                rnaModeCheckbox.IsChecked = true;
+                            }
                         }
                     }
                     break;
